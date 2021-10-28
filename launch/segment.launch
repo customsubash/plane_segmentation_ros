@@ -1,0 +1,13 @@
+<launch>
+
+  <arg name="height_above_max" default="-1.0" />
+  <arg name="distance_front_max" default="-1.0" />
+  <arg name="grid_size" default="-1.0" />
+
+  <node pkg="mina-pcl" type="floor_segmentation_node" name="floor_segmentation" >
+    <param name="height_above_max" value="$(arg height_above_max)" />
+    <param name="distance_front_max" value="$(arg distance_front_max)" />
+    <param name="grid_size" value="$(arg grid_size)" />
+  </node>
+
+</launch>
