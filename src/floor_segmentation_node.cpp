@@ -41,7 +41,7 @@ void cloud_cb(const boost::shared_ptr<const sensor_msgs::PointCloud2>& msg){
 
     /************************* pcl algorithms implementations *********************/
     checkpoint.begin();
-    if (grid_size_ >= 0.1){
+    if (grid_size_ >= 0.01){
       // cloud_filtered = voxel_filter(temp_cloud_rgb, cloud_filtered, grid_size_, grid_size_, grid_size_, distance_, height_);
       voxel_filter(temp_cloud_rgb, cloud_filtered, grid_size_, grid_size_, grid_size_, distance_, height_);
       std::cout << "PointCloud after voxel filtering: " << cloud_filtered->width * cloud_filtered->height << " data points." << std::endl;
