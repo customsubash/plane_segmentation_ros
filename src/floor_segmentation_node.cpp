@@ -8,6 +8,7 @@
 #include <pcl/PCLPointCloud2.h>
 #include <pcl/conversions.h>
 #include <pcl_ros/transforms.h>
+#include <pcl/filters/extract_indices.h>
 
 #include <pcl/io/pcd_io.h>
 #include <mina-pcl/filters.h>
@@ -19,6 +20,7 @@
 
 
 PointCloudXYZRGB::Ptr cloud_visualization(new PointCloudXYZRGB);
+PointCloudXYZRGB::Ptr cloud_filtered(new PointCloudXYZRGB);
 
 ros::Publisher pub;
 
@@ -39,8 +41,21 @@ void cloud_cb(const boost::shared_ptr<const sensor_msgs::PointCloud2>& msg){
 
     /************************* pcl algorithms implementations *********************/
     checkpoint.begin();
-    auto cloud_filtered = voxel_filter(temp_cloud_rgb, grid_size_, grid_size_, grid_size_, distance_, height_);
-    // std::cerr << "PointCloud after voxel filtering: " << cloud_filtered->width * cloud_filtered->height << " data points." << std::endl;
+    if (grid_size_ >= 0.1){
+      // cloud_filtered = voxel_filter(temp_cloud_rgb, cloud_filtered, grid_size_, grid_size_, grid_size_, distance_, height_);
+      voxel_filter(temp_cloud_rgb, cloud_filtered, grid_size_, grid_size_, grid_size_, distance_, height_);
+      std::cout << "PointCloud after voxel filtering: " << cloud_filtered->width * cloud_filtered->height << " data points." << std::endl;
+    }
+    else{
+      /************ filter incides ************/
+      auto indices = pass_filter(temp_cloud_rgb, distance_, height_);
+      pcl::ExtractIndices<pcl::PointXYZRGB> extract;
+      extract.setInputCloud(temp_cloud_rgb);
+      extract.setIndices (indices);
+      extract.setNegative (false);
+      extract.filter (*cloud_filtered);
+
+    }
     // std::cerr << grid_size_ << " " << distance_ << " " << height_ << std::endl; 
     checkpoint.create("Voxel filter timespan: ");
 
@@ -66,9 +81,9 @@ int main(int argc, char** argv)
   nh_private.param("distance_front_max", distance_, -1.0);
   nh_private.param("grid_size", grid_size_, -1.0);
 
-  if(grid_size_ < 0.1){
-      grid_size_ = 0.1;
-  }
+  // if(grid_size_ < 0.1){
+  //     grid_size_ = 0.1;
+  // }
   
   while(ros::ok()){
     ros::spinOnce();

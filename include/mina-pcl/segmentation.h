@@ -50,7 +50,7 @@ void cluster_plane_with_normals(PointCloudXYZRGB::ConstPtr input_cloud, PointClo
   pcl::NormalEstimation<pcl::PointXYZ, pcl::Normal> normal_estimator;
   normal_estimator.setSearchMethod (tree);
   normal_estimator.setInputCloud (cloud);
-  normal_estimator.setKSearch (8);
+  normal_estimator.setKSearch (16);
   // normal_estimator.setRadiusSearch(0.4);
   cp.create("Surface Normal preparation: ");
   normal_estimator.compute (*normals);
