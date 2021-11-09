@@ -87,27 +87,27 @@ void voxel_filter(
 void voxel_filter(
     pcl::PointCloud<pcl::PointXYZRGB>::ConstPtr cloud, pcl::PointCloud<pcl::PointXYZRGB>::Ptr output_cloud, float x_dim=0.05, float y_dim=0.05, float z_dim=0.05, float distance=-1.0, float height=-1.0)
 {   
-    pcl::IndicesPtr eligible_indices (new std::vector <int>);
-    pcl::PassThrough<pcl::PointXYZRGB> pass;
-    if(distance > 0.0){
-        /************** Distance filter of cloud ***************/
-        pass.setInputCloud (cloud);
-        pass.setFilterFieldName ("z");
-        pass.setFilterLimits (0.0, distance);
-        pass.filter (*eligible_indices);
-    }
-    if(height > 0.0){
-        /************** Height filter of cloud ***************/
-        pass.setInputCloud (cloud);
-        if(eligible_indices->size() > 0){
-            pass.setIndices(eligible_indices);
-        }
-        pass.setFilterFieldName ("y");
-        pass.setFilterLimits (-height, 10);
-        pass.filter (*eligible_indices);
-    }
-
-    // pcl::PointCloud<pcl::PointXYZRGB>::Ptr output_cloud (new pcl::PointCloud<pcl::PointXYZRGB>);
+    // pcl::IndicesPtr eligible_indices (new std::vector <int>);
+    // pcl::PassThrough<pcl::PointXYZRGB> pass;
+    // if(distance > 0.0){
+    //     /************** Distance filter of cloud ***************/
+    //     pass.setInputCloud (cloud);
+    //     pass.setFilterFieldName ("z");
+    //     pass.setFilterLimits (0.0, distance);
+    //     pass.filter (*eligible_indices);
+    // }
+    // if(height > 0.0){
+    //     /************** Height filter of cloud ***************/
+    //     pass.setInputCloud (cloud);
+    //     if(eligible_indices->size() > 0){
+    //         pass.setIndices(eligible_indices);
+    //     }
+    //     pass.setFilterFieldName ("y");
+    //     pass.setFilterLimits (-height, 10);
+    //     pass.filter (*eligible_indices);
+    // }
+    auto eligible_indices = pass_filter(cloud, distance, height);
+    
     // Create the filtering object
     pcl::VoxelGrid<pcl::PointXYZRGB> sor;
     sor.setInputCloud (cloud);
@@ -118,6 +118,4 @@ void voxel_filter(
 
     sor.setLeafSize (x_dim, y_dim, z_dim);
     sor.filter (*output_cloud);
-
-    // return (output_cloud);
 }

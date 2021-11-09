@@ -9,6 +9,7 @@
 #include <pcl/search/search.h>
 #include <pcl/search/kdtree.h>
 #include <pcl/features/normal_3d.h>
+#include <pcl/features/normal_3d_omp.h>
 #include <pcl/segmentation/sac_segmentation.h>
 
 #include "pointcloud.h"
@@ -35,7 +36,7 @@ pcl::IndicesPtr get_normals_index(pcl::PointCloud <pcl::Normal>::ConstPtr normal
 }
 
 
-void cluster_plane_with_normals(PointCloudXYZRGB::ConstPtr input_cloud, PointCloudXYZRGB::Ptr output_cloud){
+void cluster_plane_with_normals(PointCloudXYZRGB::ConstPtr input_cloud, PointCloudXYZRGB::Ptr output_cloud, Eigen::Vector3f orientation = {0.0, -1.0, 0.0}){
   CheckPoint cp;
   cp.begin();
 
@@ -47,10 +48,13 @@ void cluster_plane_with_normals(PointCloudXYZRGB::ConstPtr input_cloud, PointClo
 
   pcl::search::Search<pcl::PointXYZ>::Ptr tree (new pcl::search::KdTree<pcl::PointXYZ>);
   pcl::PointCloud <pcl::Normal>::Ptr normals (new pcl::PointCloud <pcl::Normal>);
-  pcl::NormalEstimation<pcl::PointXYZ, pcl::Normal> normal_estimator;
+  pcl::NormalEstimationOMP<pcl::PointXYZ, pcl::Normal> normal_estimator;
+  // pcl::NormalEstimation<pcl::PointXYZ, pcl::Normal> normal_estimator;
   normal_estimator.setSearchMethod (tree);
   normal_estimator.setInputCloud (cloud);
+  normal_estimator.setNumberOfThreads(0);
   normal_estimator.setKSearch (16);
+
   // normal_estimator.setRadiusSearch(0.4);
   cp.create("Surface Normal preparation: ");
   normal_estimator.compute (*normals);
@@ -58,7 +62,7 @@ void cluster_plane_with_normals(PointCloudXYZRGB::ConstPtr input_cloud, PointClo
 
   /************** find points normal aligning to vector **************/
   pcl::IndicesPtr aligned_indices (new std::vector <int>);
-  Eigen::Vector3f orientation = {0.0, -1.0, 0.0};
+  // Eigen::Vector3f orientation = {0.0, -1.0, 0.0};
   cp.create("Identification of normal timespan: ");
   aligned_indices = get_normals_index(normals, orientation, 0.3);
   cp.create("Finding aligned indices timespan: ");
@@ -67,7 +71,7 @@ void cluster_plane_with_normals(PointCloudXYZRGB::ConstPtr input_cloud, PointClo
   extract.setInputCloud(input_cloud);
   extract.setIndices (aligned_indices);
   extract.setNegative (true);
-  PointCloudXYZRGB::Ptr non_plane_cloud(new PointCloudXYZRGB);
-  extract.filter (*non_plane_cloud);
-  *output_cloud = *non_plane_cloud;
+  // PointCloudXYZRGB::Ptr non_plane_cloud(new PointCloudXYZRGB);
+  extract.filter (*output_cloud);
+  // *output_cloud = *non_plane_cloud;
 }
