@@ -24,6 +24,7 @@ PointCloudXYZRGB::Ptr cloud_visualization(new PointCloudXYZRGB);
 PointCloudXYZRGB::Ptr cloud_filtered(new PointCloudXYZRGB);
 
 ros::Publisher pub;
+tf::StampedTransform transform_camera_frame;
 
 double height_ = -1.0;
 double distance_ = -1.0;
@@ -49,12 +50,12 @@ void cloud_cb(const boost::shared_ptr<const sensor_msgs::PointCloud2>& msg){
     checkpoint.begin();
     if (grid_size_ >= 0.01){
       if (grid_uniform_){
-        voxel_filter(temp_cloud_rgb, cloud_filtered, grid_size_, grid_size_, grid_size_, distance_, height_);
+        voxel_filter(temp_cloud_rgb, cloud_filtered, grid_size_, grid_size_, grid_size_, distance_, height_, transform_camera_frame.getRotation());
         // ROS_WARN("uniform");
         // ROS_WARN("%f", grid_size_);
       }
       else{
-        voxel_filter(temp_cloud_rgb, cloud_filtered, grid_width_, grid_height_, grid_depth_, distance_, height_);
+        voxel_filter(temp_cloud_rgb, cloud_filtered, grid_width_, grid_height_, grid_depth_, distance_, height_, transform_camera_frame.getRotation());
         // ROS_WARN("Non-uniform");
         // ROS_WARN("%f", grid_width_);
         // ROS_WARN("%f", grid_height_);
@@ -105,7 +106,16 @@ int main(int argc, char** argv)
   nh_private.param("grid_width", grid_width_, 0.01);
   nh_private.param("grid_depth", grid_depth_, 0.01);
   
+  tf::TransformListener listener;
   while(ros::ok()){
+    try{
+      // listener.lookupTransform("base_link", "camera_depth_optical_frame", ros::Time(0), transform_depth_frame);
+      listener.lookupTransform("base_link", "camera_link", ros::Time(0), transform_camera_frame);
+    }
+    catch (tf::TransformException ex){
+      ROS_ERROR("%s",ex.what());
+      // ros::Duration(1.0).sleep();
+    }
     ros::spinOnce();
   }
 }
