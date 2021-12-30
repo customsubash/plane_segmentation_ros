@@ -14,6 +14,7 @@
 
 #include "pointcloud.h"
 #include "timestamp.h"
+#include <mina-pcl/config.h>
 
 
 pcl::IndicesPtr get_normals_index(pcl::PointCloud <pcl::Normal>::ConstPtr normals, const Eigen::Vector3f orientation_vector, double tolerance){
@@ -37,8 +38,11 @@ pcl::IndicesPtr get_normals_index(pcl::PointCloud <pcl::Normal>::ConstPtr normal
 
 
 void cluster_plane_with_normals(PointCloudXYZRGB::ConstPtr input_cloud, PointCloudXYZRGB::Ptr output_cloud, Eigen::Vector3f orientation = {0.0, -1.0, 0.0}){
-  CheckPoint cp;
+  CheckPoint cp; // DIsabled at default
+  #ifdef DEBUG
+  cp.enable();
   cp.begin();
+  #endif
 
   // Create the filtering object
   pcl::ExtractIndices<pcl::PointXYZRGB> extract;
@@ -64,14 +68,25 @@ void cluster_plane_with_normals(PointCloudXYZRGB::ConstPtr input_cloud, PointClo
   pcl::IndicesPtr aligned_indices (new std::vector <int>);
   // Eigen::Vector3f orientation = {0.0, -1.0, 0.0};
   cp.create("Identification of normal timespan: ");
-  aligned_indices = get_normals_index(normals, orientation, 0.3);
+
+  /************* Rearrange the axis to match correctly **********/
+  // x ->  y
+  // y -> -z
+  // z ->  x
+  // One can realize these transformation using debug mode from visualization windows
+  Eigen::Vector3f V;
+  V[0] = orientation[1];
+  V[1] = -orientation[2];
+  V[2] = orientation[0];
+
+  // std::cout<< "After: " <<"{"<<V<<"}" << std::endl;
+
+  aligned_indices = get_normals_index(normals, V, 0.1);
   cp.create("Finding aligned indices timespan: ");
   
   /************ remove misaligned indices ************/
   extract.setInputCloud(input_cloud);
   extract.setIndices (aligned_indices);
   extract.setNegative (true);
-  // PointCloudXYZRGB::Ptr non_plane_cloud(new PointCloudXYZRGB);
   extract.filter (*output_cloud);
-  // *output_cloud = *non_plane_cloud;
 }

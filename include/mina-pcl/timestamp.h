@@ -10,7 +10,8 @@ class CheckPoint{
     public:
         bool checkpoint_enable = true;
 
-        CheckPoint(bool en=true){
+        CheckPoint(bool en=false){
+            /* Default is disabled*/
             checkpoint_enable = en;
         };
         ~CheckPoint(){};
