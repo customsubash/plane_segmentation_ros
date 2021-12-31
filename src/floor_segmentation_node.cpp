@@ -44,14 +44,17 @@ bool grid_uniform_ = true;
 double grid_height_ = 0.01;
 double grid_width_ = 0.01;
 double grid_depth_ = 0.01;
+bool enable_segmentation_ = true;
 
 int rate_ = 3;
 
 std::string parent_frame_id_ = "base_link";
 std::string frame_id_ = "camera_link";
+std::string input_cloud_topic_ = "/input_cloud";
+std::string output_cloud_topic_ = "/output_cloud";
 
 double is_recieved = false;
-Eigen::Vector3f V;
+Eigen::Vector3f V{0,0,1};
 
 #ifdef DEBUG
 #include <pcl/visualization/cloud_viewer.h>
@@ -121,9 +124,15 @@ void process_publish(){
     checkpoint.create("Voxel filter timespan: ");
 
     /************ Subtract the indices that are normal ************/
-    cluster_plane_with_normals(cloud_filtered, cloud_visualization, V);
-    // cluster_plane_with_normals(cloud_filtered, cloud_visualization);
-    checkpoint.create("Normal clustering timespan: ");
+    if (enable_segmentation_){
+      cluster_plane_with_normals(cloud_filtered, cloud_visualization, V);
+      // cluster_plane_with_normals(cloud_filtered, cloud_visualization);
+      checkpoint.create("Normal clustering timespan: ");
+    }
+    else{
+      // pcl::copyPointCloud(*);
+      *cloud_visualization = *cloud_filtered;
+    }
 
     /******* visualization ******/
     #ifdef DEBUG
@@ -143,8 +152,6 @@ int main(int argc, char** argv)
   ros::init(argc, argv, "floor_segmentation");
   ros::NodeHandle nh;
   ros::NodeHandle nh_private("~");
-  ros::Subscriber sub = nh.subscribe<sensor_msgs::PointCloud2>("/camera/depth/color/points", 1, cloud_cb);
-  pub = nh.advertise<sensor_msgs::PointCloud2>("/segmented_cloud", 1);
   
   nh_private.param("height_above_max", height_, 2.0);
   nh_private.param("distance_front_max", distance_, 8.0);
@@ -159,6 +166,13 @@ int main(int argc, char** argv)
 
   nh_private.param("parent_frame_id", parent_frame_id_, std::string("base_link"));
   nh_private.param("frame_id", frame_id_, std::string("camera_link"));
+  nh_private.param("enable_segmentation", enable_segmentation_, true);
+
+  nh_private.param("input_cloud_topic", input_cloud_topic_, std::string("/input_cloud"));
+  nh_private.param("output_cloud_topic", output_cloud_topic_, std::string("/output_cloud"));
+
+  ros::Subscriber sub = nh.subscribe<sensor_msgs::PointCloud2>(input_cloud_topic_, 1, cloud_cb);
+  pub = nh.advertise<sensor_msgs::PointCloud2>(output_cloud_topic_, 1);
 
   tf::TransformListener listener;
   tf::StampedTransform transform;

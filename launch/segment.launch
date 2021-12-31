@@ -12,6 +12,10 @@
 
   <arg name="simulation" default="false"/>
   <arg name="publish_rate" default="1"/>
+  <arg name="enable_segmentation" default="true"/>
+
+  <arg name="input_cloud_topic" default="/camera/depth/color/points"/>
+  <arg name="output_cloud_topic" default="/segmented_cloud"/>
 
   <node pkg="mina-pcl" type="floor_segmentation_node" name="floor_segmentation" output="screen" >
     <param name="height_above_max" value="$(arg height_above_max)" />
@@ -27,6 +31,7 @@
     <param name="rate" value="$(arg publish_rate)" />
     <param name="parent_frame_id" value="base_link" />
     <param name="frame_id" value="camera_link" />
+    <param name="enable_segmentation" value="$(arg enable_segmentation)" />
   </node>
 
 </launch>

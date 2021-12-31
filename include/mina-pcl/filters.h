@@ -5,6 +5,7 @@
 #include <mina-pcl/pointcloud.h>
 #include <eigen3/Eigen/Core>
 #include <tf/tf.h>
+#include <pcl/common/transforms.h>
 
 pcl::IndicesPtr pass_filter(pcl::PointCloud<pcl::PointXYZRGB>::ConstPtr cloud,float distance=-1.0, float height=-1.0, tf::Quaternion orientation={0,0,0,1}){
     pcl::IndicesPtr eligible_indices (new std::vector <int>);
