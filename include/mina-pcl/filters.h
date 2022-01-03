@@ -118,10 +118,8 @@ void voxel_filter(
 
 // pcl::PointCloud<pcl::PointXYZRGB>::Ptr  
 void voxel_filter(
-    pcl::PointCloud<pcl::PointXYZRGB>::ConstPtr cloud, pcl::PointCloud<pcl::PointXYZRGB>::Ptr output_cloud, float x_dim=0.05, float y_dim=0.05, float z_dim=0.05, float distance=-1.0, float height=-1.0, tf::Quaternion orientation={0,0,0,1})
-{   
-    auto eligible_indices = pass_filter(cloud, distance, height, orientation);
-    
+    pcl::PointCloud<pcl::PointXYZRGB>::ConstPtr cloud, pcl::PointCloud<pcl::PointXYZRGB>::Ptr output_cloud, const pcl::IndicesPtr eligible_indices, float x_dim=0.05, float y_dim=0.05, float z_dim=0.05, float distance=-1.0, float height=-1.0, tf::Quaternion orientation={0,0,0,1})
+{    
     // Create the filtering object
     pcl::VoxelGrid<pcl::PointXYZRGB> sor;
     sor.setInputCloud (cloud);

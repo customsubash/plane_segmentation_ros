@@ -45,6 +45,8 @@ double grid_height_ = 0.01;
 double grid_width_ = 0.01;
 double grid_depth_ = 0.01;
 bool enable_segmentation_ = true;
+bool enable_voxel_filtering_ = true;
+bool enable_cropping_ = true;
 
 int rate_ = 3;
 
@@ -94,32 +96,32 @@ void process_publish(){
     printf("Start of callback\n");
     // printf ("Cloud: width = %d, height = %d\n", msg->width, msg->height);
     #endif
-    if (grid_size_ >= 0.01){
-      if (grid_uniform_){
-        voxel_filter(temp_cloud_rgb, cloud_filtered, grid_size_, grid_size_, grid_size_, distance_, height_, orientation);
-        // ROS_WARN("uniform");
-        // ROS_WARN("%f", grid_size_);
-      }
-      else{
-        voxel_filter(temp_cloud_rgb, cloud_filtered, grid_width_, grid_height_, grid_depth_, distance_, height_, orientation);
-        // ROS_WARN("Non-uniform");
-        // ROS_WARN("%f", grid_width_);
-        // ROS_WARN("%f", grid_height_);
-        // ROS_WARN("%f", grid_depth_);
-      }
-      #ifdef DEBUG
-      std::cout << "PointCloud after voxel filtering: " << cloud_filtered->width * cloud_filtered->height << " data points." << std::endl;
-      #endif
+
+    pcl::IndicesPtr indices (new pcl::Indices);
+    if (enable_cropping_){
+      indices = pass_filter(temp_cloud_rgb, distance_, height_, orientation);
+    }
+    
+    if (enable_voxel_filtering_ and grid_size_ >= 0.01){
+        voxel_filter(temp_cloud_rgb, cloud_filtered, indices, grid_size_, grid_size_, grid_size_, distance_, height_, orientation);
+        #ifdef DEBUG
+        std::cout << "PointCloud after voxel filtering: " << cloud_filtered->width * cloud_filtered->height << " data points." << std::endl;
+        #endif
     }
     else{
-      /************ filter incides ************/
-      auto indices = pass_filter(temp_cloud_rgb, distance_, height_);
-      pcl::ExtractIndices<pcl::PointXYZRGB> extract;
-      extract.setInputCloud(temp_cloud_rgb);
-      extract.setIndices (indices);
-      extract.setNegative (false);
-      extract.filter (*cloud_filtered);
-    }
+        /************ filter incides ************/
+        if (indices->size()){
+          pcl::ExtractIndices<pcl::PointXYZRGB> extract;
+          extract.setInputCloud(temp_cloud_rgb);
+          
+          extract.setIndices (indices);
+          extract.setNegative (false);
+          extract.filter (*cloud_filtered);
+        }
+        else{
+          *cloud_filtered = *temp_cloud_rgb;
+        }
+      }
     // std::cerr << grid_size_ << " " << distance_ << " " << height_ << std::endl; 
     checkpoint.create("Voxel filter timespan: ");
 
@@ -157,21 +159,23 @@ int main(int argc, char** argv)
   nh_private.param("distance_front_max", distance_, 8.0);
 
   nh_private.param("grid_size", grid_size_, 0.05);
-  nh_private.param("grid_uniform", grid_uniform_, true);
+  // nh_private.param("grid_uniform", grid_uniform_, true);
 
-  nh_private.param("grid_height", grid_height_, 0.01);
-  nh_private.param("grid_width", grid_width_, 0.01);
-  nh_private.param("grid_depth", grid_depth_, 0.01);
+  // nh_private.param("grid_height", grid_height_, 0.01);
+  // nh_private.param("grid_width", grid_width_, 0.01);
+  // nh_private.param("grid_depth", grid_depth_, 0.01);
   nh_private.param("rate", rate_, 3);
 
   nh_private.param("parent_frame_id", parent_frame_id_, std::string("base_link"));
   nh_private.param("frame_id", frame_id_, std::string("camera_link"));
   nh_private.param("enable_segmentation", enable_segmentation_, true);
+  nh_private.param("enable_voxel_filtering", enable_voxel_filtering_, true);
+  nh_private.param("enable_cropping", enable_cropping_, true);
 
   nh_private.param("input_cloud_topic", input_cloud_topic_, std::string("/input_cloud"));
   nh_private.param("output_cloud_topic", output_cloud_topic_, std::string("/output_cloud"));
 
-  ros::Subscriber sub = nh.subscribe<sensor_msgs::PointCloud2>(input_cloud_topic_, 1, cloud_cb);
+  ros::Subscriber sub = nh.subscribe<sensor_msgs::PointCloud2>(input_cloud_topic_, 5, cloud_cb);
   pub = nh.advertise<sensor_msgs::PointCloud2>(output_cloud_topic_, 1);
 
   tf::TransformListener listener;

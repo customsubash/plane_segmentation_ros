@@ -81,7 +81,7 @@ void cluster_plane_with_normals(PointCloudXYZRGB::ConstPtr input_cloud, PointClo
 
   // std::cout<< "After: " <<"{"<<V<<"}" << std::endl;
 
-  aligned_indices = get_normals_index(normals, V, 0.1);
+  aligned_indices = get_normals_index(normals, V, 0.2);
   cp.create("Finding aligned indices timespan: ");
   
   /************ remove misaligned indices ************/

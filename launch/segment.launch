@@ -3,15 +3,18 @@
   <arg name="height_above_max" default="0.5" />
   <arg name="distance_front_max" default="4.0" />
 
-  <arg name="grid_uniform" default="true" />
-  <arg name="grid_size" default="-1.0" />
+  <!-- <arg name="grid_uniform" default="true" /> -->
+  <arg name="grid_size" default="0.04" />
 
-  <arg name="grid_height" default="0.02" />
+  <!-- <arg name="grid_height" default="0.02" />
   <arg name="grid_width" default="0.02" />
-  <arg name="grid_depth" default="0.07" />
+  <arg name="grid_depth" default="0.07" /> -->
 
   <arg name="simulation" default="false"/>
   <arg name="publish_rate" default="1"/>
+
+  <arg name="enable_cropping" default="true" />
+  <arg name="enable_filtering" default="true" />
   <arg name="enable_segmentation" default="true"/>
 
   <arg name="input_cloud_topic" default="/camera/depth/color/points"/>
@@ -21,17 +24,23 @@
     <param name="height_above_max" value="$(arg height_above_max)" />
     <param name="distance_front_max" value="$(arg distance_front_max)" />
 
-    <param name="grid_uniform" value="$(arg grid_uniform)" />
+    <!-- <param name="grid_uniform" value="$(arg grid_uniform)" /> -->
     <param name="grid_size" value="$(arg grid_size)" />
 
-    <param name="grid_height" value="$(arg grid_height)" />
+    <!-- <param name="grid_height" value="$(arg grid_height)" />
     <param name="grid_width" value="$(arg grid_width)" />
-    <param name="grid_depth" value="$(arg grid_depth)" />
+    <param name="grid_depth" value="$(arg grid_depth)" /> -->
 
     <param name="rate" value="$(arg publish_rate)" />
     <param name="parent_frame_id" value="base_link" />
     <param name="frame_id" value="camera_link" />
-    <param name="enable_segmentation" value="$(arg enable_segmentation)" />
+    
+    <param name="enable_cropping" value="$(arg enable_cropping)" />
+    <param name="enable_voxel_filtering" value="$(arg enable_filtering)"/>
+    <param name="enable_voxel_segmentation" value="$(arg enable_segmentation)" />
+
+    <param name="input_cloud_topic" value="$(arg input_cloud_topic)"/>
+    <param name="output_cloud_topic" value="$(arg output_cloud_topic)"/>
   </node>
 
 </launch>
